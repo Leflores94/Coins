@@ -50,7 +50,7 @@ fluidPage(
                 fluidRow(box(
                   width = 12,
                   title = "Inicio",
-                  textOutput(outputId = "inicio_textbox")
+                  uiOutput(outputId = "inicio_textbox")
                 )
                 ),
                 fluidRow(box(
@@ -61,7 +61,7 @@ fluidPage(
                 box(
                   width = 6,
                   title = "Descripción del equipo",
-                  textOutput(outputId = "texto_equipo")
+                  uiOutput(outputId = "texto_equipo")
                 ))
                 ),
         ### Justificacion ------------------------------------------------------
