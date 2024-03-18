@@ -10,3 +10,5 @@
 
 # Requerimientos ---------------------------------------------------------------
 source("requirements.R")
+
+pacman::p_load(plotly)
