@@ -13,8 +13,11 @@ shinyServer(function(input, output) {
   ## Elementos del UI ----------------------------------------------------------
   ### Inicio -------------------------------------------------------------------
   # Cuadro informativo para seccion de Inicio
-  output$inicio_textbox <- renderText({
-    "Descripción"
+  output$inicio_textbox <- renderUI({
+    HTML("El siguiente tablero es un trabajo honesto de Coins group elaborado en el marco del Taller avanzado de R 
+         celebrado en la Ciudad de Guatemala del 18-22 de marzo de 2024."
+      
+    )
   })
   #imagen de equipo
   output$foto_grupo <- renderImage({
@@ -26,8 +29,12 @@ shinyServer(function(input, output) {
   }, deleteFile = FALSE)
 
   # Descripción del equipo.
-  output$texto_equipo <- renderText({
-    "Integrantes: Grethel, Paulina, Luis, Ale"
+  output$texto_equipo <- renderUI({
+    HTML("Integrantes: <br> 
+         Grethel Alvarado, Guatemala <br> 
+         Paulina Muñoz, Chile  <br> 
+         Luis Flores, El Salvador  <br>
+         Alejandra Yepez, México")
   })
   ### Justificacion ------------------------------------------------------------
   # Cuadro informativo para seccion de Justificacion
