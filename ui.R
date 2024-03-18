@@ -57,7 +57,13 @@ fluidPage(
                   width = 6,
                   title = "Teams Coins",
                   imageOutput(outputId = "foto_grupo")
-                ))),
+                ),
+                box(
+                  width = 6,
+                  title = "Descripción del equipo",
+                  textOutput(outputId = "texto_equipo")
+                ))
+                ),
         ### Justificacion ------------------------------------------------------
         tabItem(tabName = "justificacion",
                 fluidRow(

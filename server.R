@@ -25,7 +25,10 @@ shinyServer(function(input, output) {
     )
   }, deleteFile = FALSE)
 
-
+  # Descripción del equipo.
+  output$texto_equipo <- renderText({
+    "Integrantes: Grethel, Paulina, Luis, Ale"
+  })
   ### Justificacion ------------------------------------------------------------
   # Cuadro informativo para seccion de Justificacion
   output$justificacion_textbox <- renderText({
