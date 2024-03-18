@@ -16,6 +16,16 @@ shinyServer(function(input, output) {
   output$inicio_textbox <- renderText({
     "Descripción"
   })
+  #imagen de equipo
+  output$foto_grupo <- renderImage({
+    list(src = "data/coins.png", #los ".." y / significa que debe regresar una carpeta, ya que este código es para la capeta de scripts
+         contentType = "image/png",
+         width = "300",
+         height = "300"
+    )
+  }, deleteFile = FALSE)
+
+
   ### Justificacion ------------------------------------------------------------
   # Cuadro informativo para seccion de Justificacion
   output$justificacion_textbox <- renderText({
