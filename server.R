@@ -23,8 +23,8 @@ shinyServer(function(input, output) {
   output$foto_grupo <- renderImage({
     list(src = "data/coins.png", #los ".." y / significa que debe regresar una carpeta, ya que este código es para la capeta de scripts
          contentType = "image/png",
-         width = "300",
-         height = "300"
+         width = "100%",
+         height = "100%"
     )
   }, deleteFile = FALSE)
 
