@@ -41,6 +41,47 @@ shinyServer(function(input, output) {
   output$justificacion_textbox <- renderText({
     "Descripción"
   })
+  
+  ## Gráfica de justificación (aqui se hace el gráfico) ------------------------------------------------
+  output$grafica_justificacion <- renderPlot({
+    grafica <- # Visualicemos los datos que tenemos de manera gráfica.
+      ggplot(susceptibles, aes(x = ano)) +
+      # Nombres de ejes
+      labs(
+        title = "Susceptibles acumulados en los últimos 5 años",
+        x = "Año",
+        y = "Susceptibles Acumulados"
+      ) +
+      # Cobertura en barras
+      geom_bar(aes(y = cobertura * 400), position = "dodge", stat = "identity", fill = "#094775") +
+      # Susceptibles acumulados en lineas
+      geom_line(aes(y = susceptibles_acumulado), colour = "#ff671f", linewidth = 1) +
+      # Ajustamos los dos ejes verticales
+      scale_y_continuous(
+        # Las dosis alcanzan cerca de 40 mil
+        limits = c(0, 40e3),
+        # Agregamos un segundo eje horizontal para cobertura (con el mismo factor
+        # de conversion que en geom_bar)
+        # NOTA: Aplicamos un factor de conversión de 400 para que el eje de 
+        #       cobertura alcance 100% cuando el número de dosis alcance 40,000
+        #       dosis.
+        sec.axis = sec_axis( trans= ~./400, name = "Cobertura (%)")
+      ) +
+      # Ajuste de eje X
+      scale_x_continuous(breaks = seq(2018, 2023, 1)) +
+      # Ajustes visuales
+      theme_classic() +
+      theme(text = element_text(size = 16))
+    
+    grafica
+  })
+  
+  
+  # Tabla de la justificación -----------------------------------------------
+  output$tabla_justificacion <- renderDataTable({
+    datatable(susceptibles, class = "compact")
+  })
+  
   ### Avance de campaña --------------------------------------------------------
   # Cuadro informativo para seccion de Avance de campaña
   output$avance_campana_textbox <- renderText({
