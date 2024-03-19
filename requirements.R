@@ -14,5 +14,15 @@ if (!require("pacman")) install.packages("pacman")
 # cargar paquetes necesarios
 pacman::p_load(
   shiny,
-  shinydashboard
+  shinydashboard,
+  ggplot2,
+  DT,
+  tidyr,
+  dplyr,
+  lubridate,
+  stringr,
+  rio,
+  bench,
+  DBI,
+  RPostgres
 )
