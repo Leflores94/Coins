@@ -79,14 +79,153 @@ shinyServer(function(input, output) {
   
   # Tabla de la justificación -----------------------------------------------
   output$tabla_justificacion <- renderDataTable({
-    datatable(susceptibles, class = "compact")
+    datatable(susceptibles_muni, class = "compact",
+              options = list(
+                dom = "Btp",
+                paging = FALSE,
+                scrollX = TRUE,
+                scrollY = "500px"
+              ))
   })
   
   ### Avance de campaña --------------------------------------------------------
   # Cuadro informativo para seccion de Avance de campaña
-  output$avance_campana_textbox <- renderText({
-    "Descripción"
+  output$grafica_avance <- renderPlotly({
+    grafica_avance <- ggplot(
+      campana_nacional,
+      aes(x = fecha_vac)
+    ) +
+      # Nombramos los ejes y la leyenda
+      labs(x = "Fecha", y = "Dosis", fill = "Dosis", linetype = "Cobertura") +
+      # Mostramos el numero de dosis aplicadas cada mes
+      geom_bar(aes(y = vacunados), stat = "identity", position = "stack") +
+      # Mostramos la cobertura acumulada para cada mes.
+      # NOTA: Los datos de n_dosis alcanzan aprox 7,500, mientras que las 
+      #       coberturas son entre 0 y 100. Por lo tanto, se multiplica el valor de 
+      #       coberturas por 75 para igualar los dos ejes.
+      geom_line(aes(y = cobertura_acumulada * 75), linewidth = 1) +
+      # Modificamos el eje vertical
+      scale_y_continuous(
+        # Ajustamos los limites entre 0 y 1,000 dosis
+        limits = c(0, 7500),
+        # Agregamos un segundo eje horizontal
+        # NOTA: Aplicamos un factor de conversión de 75 para que el eje de cobertura
+        #       alcance 100% cuando el número de dosis alcance 7,500 dosis.
+        sec.axis = sec_axis( trans= ~./75, name = "Cobertura (%)")) + 
+      scale_x_date(breaks = "3 day", labels = date_format("%m %d"))
+      # Mejoramos la visualización
+      theme_classic() +
+      theme(text = element_text(size = 16))
+    ggplotly(grafica_avance, tooltip = "text") %>% 
+      config(
+        locale = "es",
+        displaylogo = FALSE,
+        scrollZoom = TRUE,
+        modeBarButtonsToAdd = c(
+          "drawline", # dibujar líneas rectas
+          "drawopenpath", # dibujar líneas libres
+          "drawcircle", # dibujar círculos
+          "drawrect", #dibujar rectángulos
+          "eraseshape" # borrador
+        ))
+    ggplotly(grafica_avance) %>% 
+      # Debemos agregar el segundo eje de nuevo, esta vez manualmente,
+      # mediante la función add_lines de plotly
+      add_lines(
+        x = ~fecha_vac, y = ~cobertura_acumulada, data = campana_nacional,
+        yaxis = "y2"
+      ) %>% 
+      # hacemos algunas configuraciones al eje y secundario y a los márgenes,
+      # para que nuestra gráfica se vea bien
+      layout(
+        # configuraciones al nuevo eje vertical
+        yaxis2 = list(
+          tickfont = list(size = 16),
+          titlefont = list(size = 18),
+          overlaying = "y",
+          nticks = 10,
+          side = "right",
+          title = "Cobertura (%)",
+          # limitamos el eje entre 0 y 100%
+          range = c(0,100),
+          showline = TRUE
+        ),
+        # agregamos un poco de margen a la derecha para que quepa el nuevo eje
+        # vertical
+        margin = list(r = 100)
+      )
+    
   })
+  departamento_reactive <- reactive({
+    campana_departamento %>% 
+      filter(departamento_res_mad == input$avance_input)
+  })
+  output$grafica_avance_dinamica<- renderPlotly({
+    grafica_avance_dinamica <- ggplot(
+      departamento_reactive(),
+      aes(x = fecha_vac)
+    ) +
+      # Nombramos los ejes y la leyenda
+      labs(x = "Fecha", y = "Dosis", fill = "Dosis", linetype = "Cobertura") +
+      # Mostramos el numero de dosis aplicadas cada mes
+      geom_bar(aes(y = vacunados), stat = "identity", position = "stack") +
+      # Mostramos la cobertura acumulada para cada mes.
+      # NOTA: Los datos de n_dosis alcanzan aprox 7,500, mientras que las 
+      #       coberturas son entre 0 y 100. Por lo tanto, se multiplica el valor de 
+      #       coberturas por 75 para igualar los dos ejes.
+      geom_line(aes(y = cobertura_acumulada), linewidth = 1) +
+      # Modificamos el eje vertical
+      #scale_y_continuous(
+        # Ajustamos los limites entre 0 y 1,000 dosis
+        #limits = c(0, 1500),
+        # Agregamos un segundo eje horizontal
+        # NOTA: Aplicamos un factor de conversión de 75 para que el eje de cobertura
+        #       alcance 100% cuando el número de dosis alcance 7,500 dosis.
+        #sec.axis = sec_axis( trans= ~./75, name = "Cobertura (%)")
+      #) +
+      # Mejoramos la visualización
+      theme_classic() +
+      theme(text = element_text(size = 16))
+    ggplotly(grafica_avance_dinamica, tooltip = "text") %>% 
+      config(
+        locale = "es",
+        displaylogo = FALSE,
+        scrollZoom = TRUE,
+        modeBarButtonsToAdd = c(
+          "drawline", # dibujar líneas rectas
+          "drawopenpath", # dibujar líneas libres
+          "drawcircle", # dibujar círculos
+          "drawrect", #dibujar rectángulos
+          "eraseshape" # borrador
+        ))
+    ggplotly(grafica_avance_dinamica) %>% 
+      # Debemos agregar el segundo eje de nuevo, esta vez manualmente,
+      # mediante la función add_lines de plotly
+      add_lines(
+        x = ~fecha_vac, y = ~cobertura_acumulada, data = campana_departamento,
+        yaxis = "y2"
+      ) %>% 
+      # hacemos algunas configuraciones al eje y secundario y a los márgenes,
+      # para que nuestra gráfica se vea bien
+      layout(
+        # configuraciones al nuevo eje vertical
+        yaxis2 = list(
+          tickfont = list(size = 16),
+          titlefont = list(size = 18),
+          overlaying = "y",
+          nticks = 10,
+          side = "right",
+          title = "Cobertura (%)",
+          # limitamos el eje entre 0 y 100%
+          range = c(0,100),
+          showline = TRUE
+        ),
+        # agregamos un poco de margen a la derecha para que quepa el nuevo eje
+        # vertical
+        margin = list(r = 100)
+      )
+  })
+  
   ### Georreferenciación -------------------------------------------------------
   # Cuadro informativo para seccion de Georreferenciación
   output$georreferenciacion_textbox <- renderText({

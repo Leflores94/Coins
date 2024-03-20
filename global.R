@@ -23,7 +23,10 @@ con <- DBI::dbConnect(RPostgres::Postgres(),
                       port = 5432) #Tenerle fe al número
 
 
+
 dbListTables(con)
+
+# Justificación -----------------------------------------------------------
 
 rnve_online <- tbl(con, "rnve")
 registro_civil_online <- tbl(con,"registro-civil")
@@ -162,7 +165,8 @@ cobertura_muni <- vacunados_rnve_muni %>%
   # Quisiéramos unir ambas bases a través del año y el municipio.
   left_join(., pob_muni, by = c("ano", "municipio_res_mad")) %>% 
   # Calculamos cobertura
-  mutate(cobertura = as.numeric(vacunados_primera) / as.numeric(poblacion)  * 100)
+  mutate(cobertura = as.numeric(vacunados_primera) / as.numeric(poblacion)  * 100) %>% 
+  mutate(cobertura = round(cobertura, 2))
 
 susceptibles_muni <- cobertura_muni %>% 
   # Nos interesa obtener el número de susceptibles de los últimos 5 años. Este
@@ -178,6 +182,7 @@ susceptibles_muni <- cobertura_muni %>%
   mutate(no_vacunados = poblacion - vacunados_primera) %>% 
   # Agregamos la cantidad de niños vacunados pero no inmunizados
   mutate(susceptibles = no_vacunados + (vacunados_primera * falla_primaria)) %>% 
+  mutate(susceptibles = round(susceptibles, 0)) %>% 
   # Calculamos el acumulado de susceptibles conforme los años pasan
   #   1.  Usamos ungroup() en caso haya alguna agrupación previa que hayamos
   #       ingresado
@@ -190,7 +195,159 @@ susceptibles_muni <- cobertura_muni %>%
   
   mutate(susceptibles_acumulado_muni = cumsum(susceptibles)) %>% 
   collect()
+  
 
 head(susceptibles_muni)
 
+
+# Avance de campaña -------------------------------------------------------
+
+# 7. Avance de campaña ---------------------------------------------------------
+# El correcto seguimiento de los avances de una campaña de vacunación es clave
+# para su buena ejecución. Además, fomenta la transparencia y la mejora
+# continua. Por lo tanto, en esta sección exploraremos cómo obtener gráficas
+# que permitan visualizar el avance de la campaña de vacunación que estamos
+# simulando.
+#
+# Para empezar, esta campaña de vacunación se está aplicando a niños y niñas
+# con al menos 13 meses de edad y no más de 5 años de edad. Por lo tanto,
+# dentro de nuestro registro civil y RNVe, necesitamos filtrar a todos aquellos
+# niñ@s que cumplan con estas características.
+
+## Fechas de campaña -----------------------------------------------------------
+# Empezamos por definir la fecha de inicio de la campaña, que ya conocemos.
+fecha_campana <- as.Date("2024-03-04", "%Y-%m-%d")
+fecha_campana
+# Calculamos la fecha de nacimiento que corresponde a la edad mínima (13 meses)
+# NOTA: El operador %m-% es un operador especial de lubridate que permite
+#       realizar la resta de dos fechas en términos de meses.
+fecha_edad_minima <- fecha_campana %m-% months(12)
+fecha_edad_minima
+# Calculamos la fecha de nacimiento que corresponde a la edad máxima (menos
+# de 5 años)
+fecha_edad_maxima <- fecha_campana %m-% months(12 * 5) - 1 #cuando tengo que restar dias, si puedo usar el "-1", para restar mes si se usa "%m-%"
+fecha_edad_maxima
+
+## Población objetivo ----------------------------------------------------------
+# Con esto listo, calculamos la población objetivo de la campaña
+# Hagamoslo a nivel departamental (ADM1) también.
+pop_campana_adm1 <- registro_civil_online %>% 
+  # Filtramos la fecha de nacimiento de acuerdo a las edades calculadas
+  # anteriormente.
+  filter(fecha_nac <= fecha_edad_minima) %>% 
+  filter(fecha_nac >= fecha_edad_maxima) %>% 
+  # Agrupamos de acuerdo all departamento de nacimiento
+  group_by(departamento_res_mad) %>% 
+  # Calculamos la cantidad de personas nacidas en ese departamento, que son
+  # elegibles para la campaña. Llamamos a esta columna "población".
+  tally(name = "poblacion")
+
+
+## Cobertura de campaña --------------------------------------------------------
+# Ahora, quisiéramos calcular la cobertura de la campaña para cada departamento
+# y cada día que ha pasado.
+campana_departamento <- rnve_online %>% 
+  # Puesto que estamos monitoreando solo la campaña, filtramos esas dosis
+  filter(dosis == "Campaña") %>% 
+  collect() %>% 
+  # La columna municipio_res_mad contiene el municipio y el departamento
+  # separados por un "-". Puesto que este patrón es válido para todas las filas,
+  # podemos obtener el departamento utilizando la función separate de tidyr.
+  tidyr::separate(
+    # La columna que queremos separar
+    municipio_res_mad,
+    # Los nombres de las nuevas columnas que se crearán.
+    #   1.  municipio contendrá todo lo que esté a la izquierda del
+    #       separador
+    #   2.  departamento_res_mad contendrá todo lo que esté a la derecha
+    #       del separador
+    c("municipio", "departamento_res_mad"),
+    # El caracter que queremos usar como separador.
+    sep = "-"
+  ) %>% 
+  # En caso haya quedado espacio en blanco extra, lo eliminamos con la
+  # función trimws.
+  mutate(departamento_res_mad = trimws(departamento_res_mad)) %>% 
+  # Ahora ya podemos agrupar por día de vacunación y el departamento de
+  # residencia
+  group_by(fecha_vac, departamento_res_mad) %>% 
+  # Y con la agrupación hecha, calcular la cantidad de vacunados para esos
+  # grupos
+  summarise(
+    vacunados = n()
+  ) %>%
+  # Como últimos pasos, quisiéramos calcular la cobertura, y para ello
+  # necesitamos la población. Esta información la tenemos en pop_campana_adm1.
+  left_join(., collect(pop_campana_adm1), by = "departamento_res_mad") %>% 
+  # Calculamos la cobertura
+  mutate(cobertura = vacunados / poblacion * 100) %>% 
+  # Y calculamos la cobertura acumulada para cada departamento (similar
+  # al cálculo de susceptibles acumulados en la sección 6.)
+  group_by(departamento_res_mad) %>% 
+  arrange(fecha_vac) %>% 
+  mutate(cobertura_acumulada = cumsum(cobertura))
+#head(campana_departamento)
+
+## Cobertura nacional ----------------------------------------------------------
+# La tabla anterior nos da un resumen por departamento y día de la campaña.
+# Para obtener una que nos resuma el avance por día a nivel nacional, podemos
+# realizar los mismos pasos de antes, pero sin agrupar por departamento.
+#
+# Primero, obtenemos la población objetivo de la campaña.
+pop_campana_nacional <- registro_civil_online %>% 
+  # Filtramos la fecha de nacimiento de acuerdo a las edades calculadas
+  # anteriormente.
+  filter(fecha_nac <= fecha_edad_minima) %>% 
+  filter(fecha_nac >= fecha_edad_maxima) %>% 
+  # Calculamos la cantidad de personas nacidas que son elegibles para la
+  # campaña. Llamamos a esta columna "población".
+  tally(name = "poblacion") %>% #Conteo de personas elegibles con las condiciones que se especificaron
+  # Puesto que para este punto tenemos una tabla con una sola fila,
+  # sacamos el dato de población objetivo a nivel nacional
+  pull(poblacion) #Sirve para jalar el número que se creó en tally
+pop_campana_nacional
+# Ahora, calculamos la cobertura
+campana_nacional <- rnve_online %>% 
+  # Puesto que estamos monitoreando solo la campaña, filtramos esas dosis
+  filter(dosis == "Campaña") %>% 
+  # Agrupamos por día solamente
+  group_by(fecha_vac) %>% #Esto para dar seguimiento dia por dia
+  # Y calculamos la cantidad de vacunados por dia
+  summarise(
+    vacunados = n()
+  ) %>%
+  # Calculamos la cobertura usando la poblacion objetivo a nivel nacional
+  mutate(cobertura = as.numeric(vacunados) / as.numeric(pop_campana_nacional) * 100) %>% 
+  # Desagrupamos, ordenamos por fecha de vacunacion y calculamos la cobertura
+  # acumulada diaria
+  ungroup %>% 
+  dbplyr::window_order(fecha_vac) %>% #ordena las fechas
+  mutate(cobertura_acumulada = cumsum(cobertura)) %>% 
+  collect()
+#head(campana_nacional)
+### Gráfica --------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Geo ---------------------------------------------------------------------
+
+
+
+
+
+
+
 dbDisconnect(con)
+

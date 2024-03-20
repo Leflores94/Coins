@@ -90,7 +90,28 @@ fluidPage(
                   box(
                     width = 12,
                     title = "Avance de Campaña",
-                    textOutput(outputId = "avance_campana_textbox")  
+                    textOutput(outputId = "avance_campana_textbox")
+                  )
+                ),
+                fluidRow(
+                  box(
+                    width = 6,
+                    size = 14,
+                    title = "Gráfica de avance diario nacional",
+                    #tags$h5("Este es un subtítulo 2", style = "margin-center: 20px; margin-top: 5px;"),
+                    plotlyOutput(outputId = "grafica_avance"),
+                    tags$h5("Elaboración propia con base en xxx", style = "margin-left: 20px; margin-down: 5px;"),
+                  ),
+                  box(
+                    width = 6,
+                    selectizeInput(
+                      inputId = "avance_input",
+                      label = "Departamento",
+                      choices = unique(campana_departamento$departamento_res_mad)
+                    ),
+                    plotlyOutput(
+                      outputId = "grafica_avance_dinamica"
+                    )
                   )
                 )),
         ### Georreferenciación -------------------------------------------------

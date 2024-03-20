@@ -24,5 +24,6 @@ pacman::p_load(
   rio,
   bench,
   DBI,
-  RPostgres
+  RPostgres,
+  plotly
 )
