@@ -119,10 +119,19 @@ fluidPage(
                 fluidRow(
                   box(
                     width = 12,
-                    title = "Georreferenciación",
+                    title = "Información geoespacial de la campaña de vacunación SRP",
                     textOutput(outputId = "georreferenciacion_textbox")
                   )
-                ))
+                ),
+                fluidRow(
+                  box(
+                    width = 12,
+                    title = "Mapita",
+                    leafletOutput(outputId = "mapa_vacuna")
+                    
+                  )
+                )
+                )
       )
     )
   )

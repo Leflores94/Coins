@@ -229,6 +229,92 @@ shinyServer(function(input, output) {
   ### Georreferenciación -------------------------------------------------------
   # Cuadro informativo para seccion de Georreferenciación
   output$georreferenciacion_textbox <- renderText({
-    "Descripción"
+    "Distribución geoespacial de las personas vacunadas en la campaña de SRP"
   })
+  
+  output$mapa_vacuna <- renderLeaflet({
+    mapa_vacuna <- leaflet(vacunados) %>% #leaflet es lo que se usa en lugar de ggplot
+      setView(-55.5, -32.5, zoom = 6) %>% 
+      addProviderTiles("OpenStreetMap") %>% 
+      addEasyButton(
+        easyButton(
+          icon = "fa-globe",
+          title = "Zoom Inicial",
+          onClick = JS("function(btn, map){ map.setZoom(6); }")
+        )
+      )
+    
+    mapa_vacuna <-mapa_vacuna %>%
+      addPolygons(
+        fillColor = ~pal(total_vac), #INCLUIR CAMPAÑA MUNICIPAL
+        color = "white",
+        dashArray = "3",
+        fillOpacity = 0.7,
+        label = labels_cor,
+        group = "avance")%>%
+      addLegend(
+        position = "bottomright",
+        pal = pal,
+        values = ~total_vac,
+        na.label = "Sin Dato",
+        title = "Número")
+    # map <- map %>% 
+    #   addCircles(
+    #     data = rnve_online,
+    #     lng = ~longitude, #X
+    #     lat = ~latitude, #Y
+    #     group = "Puntos", #Cómo el mapa va identificar la capa
+    #     label = labels_punt,
+    #     fillOpacity = 0.4) 
+    mapa_vacuna <- mapa_vacuna %>% 
+      addHeatmap(
+        data = vacunados,
+        lng = ~LONGITUDE,
+        lat = ~LATITUDE,
+        group = "calor", 
+        intensity = 2,
+        blur = 50) %>% #Para aumentar los valores de riesgo y visualizarlo. Es subjetivo
+      addLayersControl(overlayGroups = c("avance", "Puntos", "calor") , #Es un filtro, prácticamente
+                       options = layersControlOptions(collapsed = TRUE ))
+    
+    mapa_vacuna
+    
+    
+    # Mapa con filtro ---------------------------------------------------------------------
+    
+    # sexo <- unique(rnve$sexo)
+    # 
+    # sexo_list <- list()
+    # 
+    # for (i in 1:length(sexo)) {
+    #   
+    #   sexo_list[[i]] <- rnve %>% dplyr::filter(sexo == sexo[i]) 
+    # }
+    # 
+    # names(sexo_list) <- sexo
+    # 
+    # map2 <- leaflet() %>% addTiles()
+    # 
+    # colores <- c("pink", "blue")
+    # 
+    # for (i in 1:length(sexo)) {
+    #   map2 <- map2 %>% addCircles(data = sexo_list[[i]], 
+    #                               lat = ~latitude,
+    #                               lng = ~longitude,
+    #                               fillOpacity = 0.5, 
+    #                               label = ~ID,
+    #                               popup = ~paste("Edad de la madre", edad_madre), 
+    #                               group = sexo[i],
+    #                               color = colores[i])
+    # }
+    # 
+    # map2 <- map2 %>% 
+    #   addLayersControl(overlayGroups = sexo, 
+    #                    options = layersControlOptions(collapsed = TRUE ))
+    # map2
+    
+    
+    
+  })
+  
 })

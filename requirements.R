@@ -25,5 +25,9 @@ pacman::p_load(
   bench,
   DBI,
   RPostgres,
-  plotly
+  plotly,
+  scales,
+  leaflet,
+  leaflet.extras,
+  sf
 )
