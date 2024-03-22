@@ -397,7 +397,7 @@ rnve_campana$cod_departamento <- sapply(indices_interseccion, function(x) ifelse
 
 
 
-mun <- read_sf("data\\Anterior_URYMixed\\URY_ADM2_Anterior.shp")
+mun <- read_sf("data/Anterior_URYMixed/URY_ADM2_Anterior.shp")
 
 
 vacunados <- rnve_campana %>% 
