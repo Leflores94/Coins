@@ -22,23 +22,23 @@ fluidPage(
         # Modulo 1: Inicio
         menuItem(text = "Inicio",
                  tabName = "inicio",
-                 icon = icon("home"),
+                 icon = icon("heart"),
                  selected = TRUE
         ),
         # Modulo 2: Justificacion
         menuItem(text = "Justificación",
                  tabName = "justificacion",
-                 icon = icon("th-large")
+                 icon = icon("virus-slash")
         ),
         # Modulo 3: Avance Campaña
         menuItem(text = "Avance Campaña",
                  tabName = "avance_campana",
-                 icon = icon("th-large")
+                 icon = icon("syringe")
         ),
         # Modulo 4: Georreferenciacion
-        menuItem(text = "Georreferenciacion",
+        menuItem(text = "Georreferenciación",
                  tabName = "georreferenciacion",
-                 icon = icon("th-large")
+                 icon = icon("earth-americas")
         )
       )
     ),
@@ -60,6 +60,7 @@ fluidPage(
                 ),
                 box(
                   width = 6,
+                  icon = icon("people-group"),
                   title = "Descripción del equipo",
                   uiOutput(outputId = "texto_equipo")
                 ))
