@@ -10,6 +10,23 @@
 
 # Inicializar la UI ------------------------------------------------------------
 fluidPage(
+  fluidRow(
+    box(width = 12,
+        background = "red",
+        div(
+          HTML(paste0(
+            '<font color="white"><strong>',
+            "Este tablero es producto del curso avanzado de R organizado por OPS en marzo de 2024.
+    Los datos presentados en este tablero son completamente ficticios y han sido creados 
+    únicamente con fines didácticos. Cualquier similitud con datos reales, personas o 
+    eventos es pura coincidencia y no debe interpretarse como una representación exacta 
+    de la realidad. Este contenido está diseñado para ilustrar conceptos y promover el 
+    aprendizaje a través de ejemplos construidos para este fin.",
+    '</strong></font>'
+          )
+          ))
+    )
+  ),
   ## CSS -------------------------------------------------------------------------
   includeCSS("style.scss"),
   ## Inicializar dashboard -------------------------------------------------------
@@ -135,10 +152,23 @@ fluidPage(
                 ),
                 fluidRow(
                   box(
-                    width = 12,
-                    title = "Mapita",
+                    width = 6,
+                    height = 600,
+                    title = "Mapa: Total de vacunados",
+                    selectInput(
+                      inputId = "municipio_input",
+                      label = "Departamento",
+                      choices = unique(vacunados$ADM1_ISON), 
+                      # multiple = TRUE, 
+                      # selected = unique(vacunados$municipio_res_mad.x)
+                    ),
                     leafletOutput(outputId = "mapa_vacuna")
-                    
+                  ),
+                  box(
+                    width = 6,
+                    height = 600,
+                    title = "Mapa de calor: Total de vacunados",
+                    leafletOutput(outputId = "mapa_calor")
                   )
                 )
                 )

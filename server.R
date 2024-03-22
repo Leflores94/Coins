@@ -238,9 +238,13 @@ shinyServer(function(input, output) {
   output$georreferenciacion_textbox <- renderText({
     "Distribución geoespacial de las personas vacunadas en la campaña de SRP"
   })
+  municipio_reactive <- reactive({
+    vacunados %>% 
+      filter(ADM1_ISON == input$municipio_input)
+  })
   
   output$mapa_vacuna <- renderLeaflet({
-    mapa_vacuna <- leaflet(vacunados) %>% #leaflet es lo que se usa en lugar de ggplot
+    mapa_vacuna <- leaflet(municipio_reactive()) %>% #leaflet es lo que se usa en lugar de ggplot
       setView(-55.5, -32.5, zoom = 6) %>% 
       addProviderTiles("OpenStreetMap") %>% 
       addEasyButton(
@@ -264,64 +268,85 @@ shinyServer(function(input, output) {
         pal = pal,
         values = ~total_vac,
         na.label = "Sin Dato",
-        title = "Número")
-    # map <- map %>% 
-    #   addCircles(
-    #     data = rnve_online,
-    #     lng = ~longitude, #X
-    #     lat = ~latitude, #Y
-    #     group = "Puntos", #Cómo el mapa va identificar la capa
-    #     label = labels_punt,
-    #     fillOpacity = 0.4) 
-    mapa_vacuna <- mapa_vacuna %>% 
+        title = "Dosis aplicadas")
+    mapa_vacuna
+      })
+    #Mapa de calor
+    
+    output$mapa_calor <- renderLeaflet({
+      mapa_calor <- leaflet(vacunados) %>% #leaflet es lo que se usa en lugar de ggplot
+        setView(-55.5, -32.5, zoom = 6) %>% 
+        addProviderTiles("OpenStreetMap") %>% 
+        addEasyButton(
+          easyButton(
+            icon = "fa-globe",
+            title = "Zoom Inicial",
+            onClick = JS("function(btn, map){ map.setZoom(6); }")
+          )
+        )
+    mapa_calor <- mapa_calor %>% 
       addHeatmap(
         data = vacunados,
         lng = ~LONGITUDE,
         lat = ~LATITUDE,
         group = "calor", 
         intensity = 2,
-        blur = 50) %>% #Para aumentar los valores de riesgo y visualizarlo. Es subjetivo
-      addLayersControl(overlayGroups = c("avance", "Puntos", "calor") , #Es un filtro, prácticamente
-                       options = layersControlOptions(collapsed = TRUE ))
+        blur = 50) #%>% #Para aumentar los valores de riesgo y visualizarlo. Es subjetivo
+      #addLayersControl(overlayGroups = c("avance", "Puntos", "calor") , #Es un filtro, prácticamente
+                       #options = layersControlOptions(collapsed = TRUE ))
+    mapa_calor
+  })    
     
-    mapa_vacuna
     
     
-    # Mapa con filtro ---------------------------------------------------------------------
-    
-    # sexo <- unique(rnve$sexo)
+    # # Mapa con filtro ---------------------------------------------------------------------
     # 
-    # sexo_list <- list()
-    # 
-    # for (i in 1:length(sexo)) {
+    # output$mapa_corropletas <- renderLeaflet({
+    #   # Manual breaks for color bins
+    #   breaks <- c(0, 40, 60, 85, 100)
     #   
-    #   sexo_list[[i]] <- rnve %>% dplyr::filter(sexo == sexo[i]) 
-    # }
-    # 
-    # names(sexo_list) <- sexo
-    # 
-    # map2 <- leaflet() %>% addTiles()
-    # 
-    # colores <- c("pink", "blue")
-    # 
-    # for (i in 1:length(sexo)) {
-    #   map2 <- map2 %>% addCircles(data = sexo_list[[i]], 
-    #                               lat = ~latitude,
-    #                               lng = ~longitude,
-    #                               fillOpacity = 0.5, 
-    #                               label = ~ID,
-    #                               popup = ~paste("Edad de la madre", edad_madre), 
-    #                               group = sexo[i],
-    #                               color = colores[i])
-    # }
-    # 
-    # map2 <- map2 %>% 
-    #   addLayersControl(overlayGroups = sexo, 
-    #                    options = layersControlOptions(collapsed = TRUE ))
-    # map2
-    
-    
-    
-  })
-  
+    #   # para encontrar colores se puede utilizar paginas como https://r-charts.com/es/colores/
+    #   
+    #   pal <- colorBin(c("#24693D","#8CCE7D" ,"#EACF65", "#BF233C"), reverse = T , domain = mapa_cobertura$cobertura, bins = breaks)
+    #   
+    #   # se agregan labels a las capas agregadas
+    #   labels_cor <- sprintf("<b>%s", paste("Avance",mapa_cobertura$municipio_res_mad, mapa_cobertura$rango_cobertura)) %>%
+    #     lapply(htmltools::HTML)
+    #   
+    #   mapa_corropletas <- leaflet(mapa_cobertura) %>% #leaflet es lo que se usa en lugar de ggplot
+    #     setView(-55.5, -32.5, zoom = 6) %>% 
+    #     addProviderTiles("OpenStreetMap") %>% 
+    #     addEasyButton(
+    #       easyButton(
+    #         icon = "fa-globe",
+    #         title = "Zoom Inicial",
+    #         onClick = JS("function(btn, map){ map.setZoom(6); }")
+    #       )
+    #     ) %>% 
+    #   addPolygons(
+    #     fillColor = ~pal(cobertura), #INCLUIR CAMPAÑA MUNICIPAL
+    #     color = "white",
+    #     dashArray = "3",
+    #     fillOpacity = 0.7,
+    #     label = labels_cor,
+    #     group = "cobertura")%>%
+    #     addLegend(
+    #       position = "bottomright",
+    #       pal = pal,
+    #       values = ~rango_cobertura,
+    #       na.label = "Sin Dato",
+    #       title = "Rangos de cobertura") 
+    #   
+    #   # mapa_corropletas <- ggplot()+ 
+    #   #   geom_sf(data = mapa_cobertura,
+    #   #           aes(fill = rango_cobertura,
+    #   #               geometry = geometry),
+    #   #           color = '#969696',
+    #   #           size = .9)+
+    #   #   scale_fill_manual("Avance de cobertura de vacunación", 
+    #   #                     values = c("white", "lightpink", "red", "darkred", "gray")) # ajuste manual de plaeta de color
+    #   
+    #   mapa_corropletas
+        
 })
+  
