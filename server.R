@@ -39,7 +39,14 @@ shinyServer(function(input, output) {
   ### Justificacion ------------------------------------------------------------
   # Cuadro informativo para seccion de Justificacion
   output$justificacion_textbox <- renderText({
-    "Descripción"
+    "Ante la alerta epidemiológica internacional brindada por la Organización
+    Panamericana de la Salud de los brotes de sarampión en la Región de las 
+    Américas es necesario realizar una verificación de las coberturas de 
+    vacunación de SPR1 y SPR2 como estrategia de disminución de brechas de
+    niños susceptibles que permitirán reducir el riesgo ante un caso importado
+    en nuestras poblaciones e identificar la cantidad de susceptibles a 
+    sarampión para realizar acciones como la implementación de una campaña 
+    de seguimiento de alta calidad."
   })
   
   ## Gráfica de justificación (aqui se hace el gráfico) ------------------------------------------------
@@ -84,7 +91,7 @@ shinyServer(function(input, output) {
                 dom = "Btp",
                 paging = FALSE,
                 scrollX = TRUE,
-                scrollY = "500px"
+                scrollY = "374px"
               ))
   })
   

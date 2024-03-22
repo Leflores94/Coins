@@ -28,7 +28,7 @@ fluidPage(
         # Modulo 2: Justificacion
         menuItem(text = "Justificación",
                  tabName = "justificacion",
-                 icon = icon("virus-slash")
+                 icon = icon("shield-virus")
         ),
         # Modulo 3: Avance Campaña
         menuItem(text = "Avance Campaña",
@@ -76,11 +76,13 @@ fluidPage(
                 fluidRow(
                   box(
                     width = 6,
+                    height = 500,
                     title = "Gráfica",
                     plotOutput(outputId = "grafica_justificacion")),
                   
                   box(
                     width = 6,
+                    height = 500,
                     title = "Tabla",
                     dataTableOutput(outputId = "tabla_justificacion"))
                   )
@@ -101,7 +103,14 @@ fluidPage(
                     title = "Gráfica de avance diario nacional",
                     #tags$h5("Este es un subtítulo 2", style = "margin-center: 20px; margin-top: 5px;"),
                     plotlyOutput(outputId = "grafica_avance"),
-                    tags$h5("Elaboración propia con base en xxx", style = "margin-left: 20px; margin-down: 5px;"),
+                    tags$h5("Los datos presentados en esta gráfica son
+                            preliminares y están sujetos a cambios, según 
+                          confirmación de establecimientos de salud.",
+                            style = "margin-left: 20px; margin-down: 5px;"),
+                  
+                  tags$h5("Fuente: Ministerio de Salud, datos del registro 
+                            nominal de vacunación. 2024.",
+                          style = "margin-left: 20px; margin-down: 5px;"),
                   ),
                   box(
                     width = 6,
